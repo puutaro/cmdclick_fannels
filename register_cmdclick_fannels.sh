@@ -9,7 +9,7 @@ terminalDo=ON
 openWhere=CW
 terminalFocus=ON
 editExecute=ONCE
-setVariableTypes="mode:CB=register!status!flush!commit!reset!push!pull"
+setVariableTypes="mode:CB=register!status!flush!commit!reset!pull"
 setVariableTypes="targetFannelNum:CB=ONE!ALL"
 beforeCommand=
 afterCommand=
@@ -38,6 +38,7 @@ readonly FANNEL_LIST_PATH="${FANNEL_DIR_PATH}/fannel_list.txt"
 readonly TMP_DIR_PATH="${FANNEL_DIR_PATH}/tmp"
 readonly CP_SHELL_PATH="${TMP_DIR_PATH}/exec_cp.sh"
 readonly HISTORY_LIST_PATH="${TMP_DIR_PATH}/history.txt"
+HISTORY_LIST_CON="$(cat "${HISTORY_LIST_PATH}")"
 
 make_cp_and_mkdir(){
 	local path_and_relativepath="$(cat -)"
@@ -55,13 +56,13 @@ make_cp_and_mkdir(){
 	}'
 }
 
-make_cp_list(){
+update_history_list_con(){
 	while IFS= read -r line; do
 		local target_fannel_path="${line}"
 		local target_fannel_app_dir_path="$(dirname "${target_fannel_path}")"
 		local target_fannel_dir_path="${target_fannel_app_dir_path}/$(basename "${target_fannel_path}" | sed 's/\.sh$/Dir/')"
-		local history_list_con=$(\
-			cat "${HISTORY_LIST_PATH}" \
+		HISTORY_LIST_CON=$(\
+			echo "${HISTORY_LIST_CON}" \
 				| awk -v target_fannel_path="${target_fannel_path}" '{
 							if(!$0) next
 							if($0 == target_fannel_path) next
@@ -71,25 +72,15 @@ make_cp_list(){
 					print target_fannel_path
 				}' \
 		)
-		sleep 0.1
-		echo "${history_list_con}" > "${HISTORY_LIST_PATH}"
-		local fannel_list_con=$(cat "${FANNEL_LIST_PATH}" \
-		| aku trm \
-		| awk -v history_list_con="${history_list_con}" '{
-			if($0 ~ /^#/) next
-			if(!$0) next
-			history_list_con=sprintf("\n%s\n", history_list_con)
-			fannel_path=$0
-			fannel_path_regex_prefix=sprintf("\n%s\n", fannel_path)
-			if(history_list_con ~ fannel_path_regex_prefix ) next
-			print $0
-		}')
-		cat \
-			<(echo "${fannel_list_con}") \
-			<(echo "${history_list_con}") \
-		| sed '/^$/d' \
-		> "${HISTORY_LIST_PATH}"
-
+		echo "${target_fannel_path}"
+	done
+	echo "${HISTORY_LIST_CON}" > "${HISTORY_LIST_PATH}"
+}
+make_cp_list(){
+	while IFS= read -r line; do
+		local target_fannel_path="${line}"
+		local target_fannel_app_dir_path="$(dirname "${target_fannel_path}")"
+		local target_fannel_dir_path="${target_fannel_app_dir_path}/$(basename "${target_fannel_path}" | sed 's/\.sh$/Dir/')"
 		echo "${target_fannel_path}"\
 		| make_cp_and_mkdir \
 			"${target_fannel_app_dir_path}"
@@ -181,10 +172,44 @@ git_commit(){
 }
 
 exec_register(){
-	cat "${HISTORY_LIST_PATH}" \
+	readonly fannel_list_con=$(cat "${FANNEL_LIST_PATH}")
+	readonly fannel_list_con_without_history=$(\
+		echo "${fannel_list_con}" \
+		| aku trm \
+		| awk -v history_list_con="${HISTORY_LIST_CON}" '{
+			if($0 ~ /^#/) next
+			if(!$0) next
+			history_list_con=sprintf("\n%s\n", history_list_con)
+			fannel_path=$0
+			fannel_path_regex_prefix=sprintf("\n%s\n", fannel_path)
+			if(history_list_con ~ fannel_path_regex_prefix ) next
+			print $0
+		}'\
+	)
+	HISTORY_LIST_CON=$(\
+		echo "${HISTORY_LIST_CON}" \
+		| aku trm \
+		| awk -v fannel_list_con="${fannel_list_con}" '{
+			if($0 ~ /^#/) next
+			if(!$0) next
+			fannel_list_con=sprintf("\n%s\n", fannel_list_con)
+			history_fannel_path=$0
+			history_fannel_path_regex_prefix=sprintf("\n%s\n", history_fannel_path)
+			if(fannel_list_con !~ history_fannel_path_regex_prefix) next
+			print $0
+		}'\
+	)
+	HISTORY_LIST_CON=$(\
+		cat \
+				<(echo "${fannel_list_con_without_history}") \
+				<(echo "${HISTORY_LIST_CON}") \
+			| sed '/^$/d' \
+		)
+	echo "${HISTORY_LIST_CON}" \
 	| aku trm -p "#" \
 	| sed '/^$/d' \
 	| handle_one_or_all \
+	| update_history_list_con \
 	| make_cp_list \
 	| sed '1i #!/bin/bash' \
 	> "${CP_SHELL_PATH}"
@@ -202,6 +227,7 @@ case  "${mode}" in
 		;;
 	"commit")
 		git_commit
+		git_push
 		;;
 	"reset")
 		git_reset
@@ -209,9 +235,9 @@ case  "${mode}" in
 	"pull")
 		git_pull
 		;;
-	"push")
-		git_push
-		;;
+	# "push")
+	# 	git_push
+	# 	;;
 	*)
 		exec_register
 		;;
