@@ -9,7 +9,7 @@ terminalDo=ON
 openWhere=CW
 terminalFocus=ON
 editExecute=ONCE
-setVariableTypes="mode:CB=register!status!reset!commit"
+setVariableTypes="mode:CB=register!status!flush!commit!reset!push!pull"
 setVariableTypes="targetFannelNum:CB=ONE!ALL"
 beforeCommand=
 afterCommand=
@@ -37,6 +37,7 @@ readonly FANNEL_DIR_PATH="${APP_DIR_PATH}/${FANNEL_DIR_NAME}"
 readonly FANNEL_LIST_PATH="${FANNEL_DIR_PATH}/fannel_list.txt"
 readonly TMP_DIR_PATH="${FANNEL_DIR_PATH}/tmp"
 readonly CP_SHELL_PATH="${TMP_DIR_PATH}/exec_cp.sh"
+readonly HISTORY_LIST_PATH="${TMP_DIR_PATH}/history.txt"
 
 make_cp_and_mkdir(){
 	local path_and_relativepath="$(cat -)"
@@ -50,7 +51,7 @@ make_cp_and_mkdir(){
 	 	gsub(target_fannel_app_dir_path_arg, "'${GIT_DIR_PATH}'", dest_path)
 	 	cp_cmd=sprintf("cp -avf \x22%s\x22 \x22%s\x22", src_path, dest_path)
 	 	mkdir_cmd=sprintf("mkdir -p \x22$(dirname \x22%s\x22)\x22", dest_path)
-	 	printf("%s || %s && %s\n", cp_cmd, mkdir_cmd, cp_cmd)
+	 	printf("%s || { %s && %s ;}\n", cp_cmd, mkdir_cmd, cp_cmd)
 	}'
 }
 
@@ -59,6 +60,36 @@ make_cp_list(){
 		local target_fannel_path="${line}"
 		local target_fannel_app_dir_path="$(dirname "${target_fannel_path}")"
 		local target_fannel_dir_path="${target_fannel_app_dir_path}/$(basename "${target_fannel_path}" | sed 's/\.sh$/Dir/')"
+		local history_list_con=$(\
+			cat "${HISTORY_LIST_PATH}" \
+				| awk -v target_fannel_path="${target_fannel_path}" '{
+							if(!$0) next
+							if($0 == target_fannel_path) next
+							print $0
+				}
+				END {
+					print target_fannel_path
+				}' \
+		)
+		sleep 0.1
+		echo "${history_list_con}" > "${HISTORY_LIST_PATH}"
+		local fannel_list_con=$(cat "${FANNEL_LIST_PATH}" \
+		| aku trm \
+		| awk -v history_list_con="${history_list_con}" '{
+			if($0 ~ /^#/) next
+			if(!$0) next
+			history_list_con=sprintf("\n%s\n", history_list_con)
+			fannel_path=$0
+			fannel_path_regex_prefix=sprintf("\n%s\n", fannel_path)
+			if(history_list_con ~ fannel_path_regex_prefix ) next
+			print $0
+		}')
+		cat \
+			<(echo "${fannel_list_con}") \
+			<(echo "${history_list_con}") \
+		| sed '/^$/d' \
+		> "${HISTORY_LIST_PATH}"
+
 		echo "${target_fannel_path}"\
 		| make_cp_and_mkdir \
 			"${target_fannel_app_dir_path}"
@@ -96,7 +127,8 @@ handle_one_or_all(){
 		    n = split($1, path, "/");
 		    file_name=path[n]
 		    print file_name "\t" $0
-		}' | fzf \
+		}' | tac\
+		 | fzf \
 		| cut -f 2
 		;;
 	"ALL")
@@ -111,19 +143,45 @@ git_status(){
 	| aku iro "color:blue"
 
 }
-git_reset(){
+git_flush(){
 	cd "${GIT_DIR_PATH}"
 	git checkout .
 	git_status
 
 }
+git_reset(){
+	cd "${GIT_DIR_PATH}"
+	git reset
+	git_status
+
+}
+git_push(){
+	cd "${GIT_DIR_PATH}"
+	git push origin master
+
+}
+git_pull(){
+	cd "${GIT_DIR_PATH}"
+	git pull origin master
+	git_status
+
+}
 git_commit(){
 	cd "${GIT_DIR_PATH}"
+	git status --short | cut -c4- | grep '.sh$' \
+	| awk '{
+		fannel_path=$0
+		fannel_dir_path=$0
+		gsub(/\.sh$/, "Dir", fannel_dir_path)
+		printf ("git add \x22%s\x22\n", fannel_path)
+		print "sleep 0.1"
+		printf ("git add \x22%s\x22\n", fannel_dir_path)
+	}'  | bash
 	git commit
 }
 
 exec_register(){
-	cat "${FANNEL_LIST_PATH}" \
+	cat "${HISTORY_LIST_PATH}" \
 	| aku trm -p "#" \
 	| sed '/^$/d' \
 	| handle_one_or_all \
@@ -139,11 +197,20 @@ case  "${mode}" in
 	"status")
 		git_status
 		;;
-	"reset")
-		git_reset
+	"flush")
+		git_flush
 		;;
 	"commit")
 		git_commit
+		;;
+	"reset")
+		git_reset
+		;;
+	"pull")
+		git_pull
+		;;
+	"push")
+		git_push
 		;;
 	*)
 		exec_register
