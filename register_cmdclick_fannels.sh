@@ -40,22 +40,6 @@ readonly CP_SHELL_PATH="${TMP_DIR_PATH}/exec_cp.sh"
 readonly HISTORY_LIST_PATH="${TMP_DIR_PATH}/history.txt"
 HISTORY_LIST_CON="$(cat "${HISTORY_LIST_PATH}")"
 
-make_cp_and_mkdir(){
-	local path_and_relativepath="$(cat -)"
-	local target_fannel_app_dir_path_arg="${1}"
-	echo "${path_and_relativepath}" \
-		| awk \
-		-v target_fannel_app_dir_path_arg="^${target_fannel_app_dir_path_arg//\//\\\/}"\
-	 '{
-	 	src_path=$0
-	 	dest_path=$0
-	 	gsub(target_fannel_app_dir_path_arg, "'${GIT_DIR_PATH}'", dest_path)
-	 	cp_cmd=sprintf("cp -avf \x22%s\x22 \x22%s\x22", src_path, dest_path)
-	 	mkdir_cmd=sprintf("mkdir -p \x22$(dirname \x22%s\x22)\x22", dest_path)
-	 	printf("%s || { %s && %s ;}\n", cp_cmd, mkdir_cmd, cp_cmd)
-	}'
-}
-
 update_history_list_con(){
 	while IFS= read -r line; do
 		local target_fannel_path="${line}"
@@ -76,6 +60,22 @@ update_history_list_con(){
 	done
 	echo "${HISTORY_LIST_CON}" > "${HISTORY_LIST_PATH}"
 }
+make_cp_and_mkdir(){
+	local path_and_relativepath="$(cat -)"
+	local target_fannel_app_dir_path_arg="${1}"
+	echo "${path_and_relativepath}" \
+		| awk \
+		-v target_fannel_app_dir_path_arg="^${target_fannel_app_dir_path_arg//\//\\\/}"\
+	 '{
+	 	src_path=$0
+	 	dest_path=$0
+	 	gsub(target_fannel_app_dir_path_arg, "'${GIT_DIR_PATH}'", dest_path)
+	 	cp_cmd=sprintf("cp -avf \x22%s\x22 \x22%s\x22", src_path, dest_path)
+	 	mkdir_cmd=sprintf("mkdir -p \x22$(dirname \x22%s\x22)\x22", dest_path)
+	 	printf("%s || { %s && %s ;}\n", cp_cmd, mkdir_cmd, cp_cmd)
+	}'
+}
+
 make_cp_list(){
 	while IFS= read -r line; do
 		local target_fannel_path="${line}"
