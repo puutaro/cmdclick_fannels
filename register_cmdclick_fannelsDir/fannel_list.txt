@@ -1,0 +1,3 @@
+/home/haumi/デスクトップ/share/shell/cmdclick/full_use/vlc_play.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/full_use/movie_capture.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/full_use/register_cmdclick_fannels.sh
