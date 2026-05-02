@@ -9,7 +9,7 @@ terminalDo=ON
 openWhere=CW
 terminalFocus=ON
 editExecute=ONCE
-setVariableTypes="mode:CB=register!status!flush!commit!reset!pull"
+setVariableTypes="mode:CB=register!status!flush!commit!reset!pull!push"
 setVariableTypes="targetFannelNum:CB=ONE!ALL"
 beforeCommand=
 afterCommand=
@@ -235,9 +235,9 @@ case  "${mode}" in
 	"pull")
 		git_pull
 		;;
-	# "push")
-	# 	git_push
-	# 	;;
+	"push")
+		git_push
+		;;
 	*)
 		exec_register
 		;;
