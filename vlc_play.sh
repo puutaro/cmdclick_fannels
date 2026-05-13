@@ -23,8 +23,8 @@ scriptFileName=vlc_play.sh
 
 ### CMD_VARIABLE_SECTION_START
 mode=search
-playMp4Name=hunter_hunter_0000_today_104000_20260413145712_20260413_145712.mp4
-moveDirPrefix=/home/haumi/デスクトップ/share/haumi-gp/erma-haumi/Public/娯楽/move
+playMp4Name=f1マイアミスプリント予選-2026_2220_today_021000_20260502165021_20260502_222000.mp4
+moveDirPrefix=/mnt/bigvol/bigshare/娯楽/move
 onLoop=ON
 onDebug=OFF
 ### CMD_VARIABLE_SECTION_END

@@ -9,7 +9,7 @@ terminalDo=ON
 openWhere=CW
 terminalFocus=ON
 editExecute=ONCE
-setVariableTypes="mode:CB=register!status!flush!commit!reset!pull!push"
+setVariableTypes="mode:CB=register!status!flush!commit_push!reset!pull"
 setVariableTypes="targetFannelNum:CB=ONE!ALL"
 beforeCommand=
 afterCommand=
@@ -22,7 +22,7 @@ scriptFileName=register_cmdclick_fannels.sh
 
 ### CMD_VARIABLE_SECTION_START
 mode=register
-targetFannelNum=ONE
+targetFannelNum=ALL
 ### CMD_VARIABLE_SECTION_END
 
 
@@ -30,6 +30,7 @@ targetFannelNum=ONE
 
 set -ue
 
+e=""
 readonly GIT_DIR_PATH="/home/haumi/デスクトップ/share/shell/cmdclick_fannels"
 readonly APP_DIR_PATH="$(dirname "$0")"
 readonly FANNEL_DIR_NAME="$(basename "${0}" | sed 's/\.sh$/Dir/')"
@@ -225,8 +226,8 @@ case  "${mode}" in
 	"flush")
 		git_flush
 		;;
-	"commit")
-		git_commit
+	"commit_push")
+		git_commit || e=$?
 		git_push
 		;;
 	"reset")
@@ -235,9 +236,9 @@ case  "${mode}" in
 	"pull")
 		git_pull
 		;;
-	"push")
-		git_push
-		;;
+	# "push")
+	# 	git_push
+	# 	;;
 	*)
 		exec_register
 		;;

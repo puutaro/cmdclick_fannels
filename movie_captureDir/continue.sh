@@ -48,7 +48,7 @@ while true; do
         echo "プロセスが見つからないため、監視を終了します。"
         break
     fi
-    xdotool key k
+    xdotool type @
 done
 
  

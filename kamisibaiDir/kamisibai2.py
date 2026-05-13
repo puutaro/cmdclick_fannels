@@ -92,7 +92,7 @@ def save_html_page(page_idx, total_pages, segments_chunk, output_folder, display
         /* FOOTER: 下スクロールで隠れる */
         #main-footer {{ 
             position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.98); 
-            border-top: 1px solid #ddd; padding: 15px 0; z-index: 6000; display: flex; flex-direction: column; align-items: center; gap: 12px;
+            border-top: solid 1px #ddd; padding: 15px 0; z-index: 6000; display: flex; flex-direction: column; align-items: center; gap: 12px;
             transition: transform 0.3s ease; 
         }}
         
@@ -340,14 +340,12 @@ def generate_storyboard(video_path, output_folder, thumb_width, prompt=None, lan
         cap.set(cv2.CAP_PROP_POS_MSEC, s.start * 1000)
         ret, frame = cap.read()
         if ret:
-            full_fn, thumb_fn = f"full_{i:04d}.jpg", f"thumb_{i:04d}.jpg"
-            full_img_resized = cv2.resize(frame, (target_full_width, new_h), interpolation=cv2.INTER_AREA)
-            cv2.imwrite(os.path.join(output_folder, "img", full_fn), frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+            full_fn, thumb_fn = f"full_{i:04d}.webp", f"thumb_{i:04d}.webp"
+            cv2.imwrite(os.path.join(output_folder, "img", full_fn), frame, [int(cv2.IMWRITE_WEBP_QUALITY), 50])
             h, w = frame.shape[:2]
             new_size = (int(thumb_width), int(h * (thumb_width / w)))
             thumb_f = cv2.resize(frame, dsize=new_size, interpolation=cv2.INTER_AREA)
-            # thumb_f = cv2.resize(frame, (thumb_width, int(h*(thumb_width/w))), interpolation=cv2.INTER_AREA)
-            cv2.imwrite(os.path.join(output_folder, "img", thumb_fn), thumb_f, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+            cv2.imwrite(os.path.join(output_folder, "img", thumb_fn), thumb_f, [int(cv2.IMWRITE_WEBP_QUALITY), 80])
             processed_data.append((i, s, full_fn, thumb_fn))
         sys.stdout.write(f"\r      抽出進捗: {i+1:4} / {total_seg} 枚")
         sys.stdout.flush()

@@ -1,3 +1,6 @@
-/home/haumi/デスクトップ/share/shell/cmdclick/full_use/vlc_play.sh
-/home/haumi/デスクトップ/share/shell/cmdclick/full_use/movie_capture.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/move/vlc_play.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/move/movie_capture.sh
 /home/haumi/デスクトップ/share/shell/cmdclick/full_use/register_cmdclick_fannels.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/move/kamisibai.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/move/program_table_to_tsv.sh
+/home/haumi/デスクトップ/share/shell/cmdclick/move/end_trim_movie.sh

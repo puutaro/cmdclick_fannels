@@ -23,12 +23,12 @@ scriptFileName=movie_capture.sh
 
 ### CMD_VARIABLE_SECTION_START
 MODE=setQ
-CAPTURE_NAME=f1マイアミ予選-2026
-CAPTURE_DURATION=02:30:00
-CAPTURE_SAVE_DIR_PATH=/home/vubabu/デスクトップ/share/haumi-gp/erma-haumi/Public/娯楽/move/f1/2026_f1マイアミ
-START_TIME=04:50
-continueSwitch=OFF
-AFTER=tomorrow
+CAPTURE_NAME=新選組
+CAPTURE_DURATION=50:00:00
+CAPTURE_SAVE_DIR_PATH=/home/vubabu/デスクトップ/bigshare/娯楽/move/dorama/新選組
+START_TIME=00:00
+continueSwitch=ON
+AFTER=today
 ### CMD_VARIABLE_SECTION_END
 
 
